@@ -412,11 +412,15 @@ async function convertToMP3WithFFmpeg(videoId, outputPath) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  const tempScriptPath = path.join(outputDir, `${videoId}_download.ps1`);
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  const isWindows = process.platform === "win32";
 
-  // Write a PowerShell script that uses youtube-dl to download the audio
-  const scriptContent = `
+  if (isWindows) {
+    // Windows implementation using PowerShell
+    const tempScriptPath = path.join(outputDir, `${videoId}_download.ps1`);
+
+    // Write a PowerShell script that uses youtube-dl to download the audio
+    const scriptContent = `
 # Download YouTube audio
 $url = "${youtubeUrl}"
 $output = "${outputPath.replace(/\\/g, "\\\\")}"
@@ -448,72 +452,163 @@ if (Test-Path "$output") {
 }
 `;
 
-  // Write the script to disk
-  fs.writeFileSync(tempScriptPath, scriptContent);
+    // Write the script to disk
+    fs.writeFileSync(tempScriptPath, scriptContent);
 
-  return new Promise((resolve, reject) => {
-    // Execute the PowerShell script
-    const powershell = spawn("powershell", [
-      "-ExecutionPolicy",
-      "Bypass",
-      "-File",
-      tempScriptPath,
-    ]);
+    return new Promise((resolve, reject) => {
+      // Execute the PowerShell script
+      const powershell = spawn("powershell", [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        tempScriptPath,
+      ]);
 
-    let output = "";
+      let output = "";
 
-    powershell.stdout.on("data", (data) => {
-      const dataStr = data.toString();
-      output += dataStr;
-      console.log(`PowerShell: ${dataStr}`);
-    });
+      powershell.stdout.on("data", (data) => {
+        const dataStr = data.toString();
+        output += dataStr;
+        console.log(`PowerShell: ${dataStr}`);
+      });
 
-    powershell.stderr.on("data", (data) => {
-      const dataStr = data.toString();
-      output += dataStr;
-      console.error(`PowerShell Error: ${dataStr}`);
-    });
+      powershell.stderr.on("data", (data) => {
+        const dataStr = data.toString();
+        output += dataStr;
+        console.error(`PowerShell Error: ${dataStr}`);
+      });
 
-    powershell.on("error", (error) => {
-      reject(new Error(`PowerShell error: ${error.message}`));
-    });
+      powershell.on("error", (error) => {
+        reject(new Error(`PowerShell error: ${error.message}`));
+      });
 
-    powershell.on("close", (code) => {
-      // Delete the temporary script
-      fs.unlink(tempScriptPath, () => {});
+      powershell.on("close", (code) => {
+        // Delete the temporary script
+        fs.unlink(tempScriptPath, () => {});
 
-      if (code === 0) {
-        // Check if the file exists
-        if (fs.existsSync(outputPath)) {
-          resolve(outputPath);
-        } else {
-          // Try to find any MP3 file with a similar name in the same directory
-          const dir = path.dirname(outputPath);
-          const files = fs.readdirSync(dir);
-          const mp3Files = files.filter(
-            (file) => file.endsWith(".mp3") && file.includes(videoId)
-          );
-
-          if (mp3Files.length > 0) {
-            const foundFile = path.join(dir, mp3Files[0]);
-            resolve(foundFile);
+        if (code === 0) {
+          // Check if the file exists
+          if (fs.existsSync(outputPath)) {
+            resolve(outputPath);
           } else {
-            reject(
-              new Error(
-                `PowerShell script executed successfully but could not find the output file.`
-              )
+            // Try to find any MP3 file with a similar name in the same directory
+            const dir = path.dirname(outputPath);
+            const files = fs.readdirSync(dir);
+            const mp3Files = files.filter(
+              (file) => file.endsWith(".mp3") && file.includes(videoId)
             );
+
+            if (mp3Files.length > 0) {
+              const foundFile = path.join(dir, mp3Files[0]);
+              resolve(foundFile);
+            } else {
+              reject(new Error("Failed to find the downloaded MP3 file"));
+            }
           }
+        } else {
+          reject(new Error(`PowerShell process exited with code ${code}`));
         }
-      } else {
-        reject(
-          new Error(
-            `PowerShell script exited with code ${code}. Output: ${output}`
-          )
-        );
-      }
+      });
     });
-  });
+  } else {
+    // Linux/Mac implementation using bash
+    const tempScriptPath = path.join(outputDir, `${videoId}_download.sh`);
+
+    // Write a bash script that uses youtube-dl/yt-dlp to download the audio
+    const scriptContent = `#!/bin/bash
+# Download YouTube audio
+url="${youtubeUrl}"
+output="${outputPath.replace(/"/g, '\\"')}"
+
+# Check if youtube-dl or yt-dlp is installed
+if command -v youtube-dl &> /dev/null; then
+    ytdl_cmd="youtube-dl"
+elif command -v yt-dlp &> /dev/null; then
+    ytdl_cmd="yt-dlp"
+else
+    echo "Neither youtube-dl nor yt-dlp is installed. Installing yt-dlp..."
+    if command -v pip3 &> /dev/null; then
+        pip3 install yt-dlp
+        ytdl_cmd="yt-dlp"
+    elif command -v pip &> /dev/null; then
+        pip install yt-dlp
+        ytdl_cmd="yt-dlp"
+    else
+        echo "Failed to install yt-dlp. Please install pip or yt-dlp manually."
+        exit 1
+    fi
+fi
+
+# Download the audio
+$ytdl_cmd -x --audio-format mp3 --audio-quality 0 -o "$output" "$url"
+
+# Check if the download was successful
+if [ -f "$output" ]; then
+    echo "Download complete: $output"
+    exit 0
+else
+    echo "Failed to download $url"
+    exit 1
+fi
+`;
+
+    // Write the script to disk
+    fs.writeFileSync(tempScriptPath, scriptContent);
+
+    // Make the script executable
+    fs.chmodSync(tempScriptPath, "755");
+
+    return new Promise((resolve, reject) => {
+      // Execute the bash script
+      const bash = spawn("bash", [tempScriptPath]);
+
+      let output = "";
+
+      bash.stdout.on("data", (data) => {
+        const dataStr = data.toString();
+        output += dataStr;
+        console.log(`Bash: ${dataStr}`);
+      });
+
+      bash.stderr.on("data", (data) => {
+        const dataStr = data.toString();
+        output += dataStr;
+        console.error(`Bash Error: ${dataStr}`);
+      });
+
+      bash.on("error", (error) => {
+        reject(new Error(`Bash error: ${error.message}`));
+      });
+
+      bash.on("close", (code) => {
+        // Delete the temporary script
+        fs.unlink(tempScriptPath, () => {});
+
+        if (code === 0) {
+          // Check if the file exists
+          if (fs.existsSync(outputPath)) {
+            resolve(outputPath);
+          } else {
+            // Try to find any MP3 file with a similar name in the same directory
+            const dir = path.dirname(outputPath);
+            const files = fs.readdirSync(dir);
+            const mp3Files = files.filter(
+              (file) => file.endsWith(".mp3") && file.includes(videoId)
+            );
+
+            if (mp3Files.length > 0) {
+              const foundFile = path.join(dir, mp3Files[0]);
+              resolve(foundFile);
+            } else {
+              reject(new Error("Failed to find the downloaded MP3 file"));
+            }
+          }
+        } else {
+          reject(new Error(`Bash process exited with code ${code}`));
+        }
+      });
+    });
+  }
 }
 
 /**
