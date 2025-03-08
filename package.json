@@ -1,5 +1,5 @@
 {
-  "name": "@RimunAce/gimmeytmp3",
+  "name": "gimmeytmp3",
   "version": "1.0.0",
   "description": "Download YouTube videos as MP3 files",
   "main": "index.js",
@@ -30,10 +30,7 @@
   "engines": {
     "node": ">=16.0.0"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "dependencies": {
-    "@RimunAce/gimmeytmp3": "file:"
+    "gimmeytmp3": "file:"
   }
 }

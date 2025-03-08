@@ -9,6 +9,7 @@ examples/web-interface/downloads/
 # Environment variables
 .env
 .npmrc
+.npmrc.github
 
 # Build output
 dist/
