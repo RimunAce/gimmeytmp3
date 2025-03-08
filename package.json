@@ -1,6 +1,6 @@
 {
   "name": "gimmeytmp3",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Download YouTube videos as MP3 files",
   "main": "index.js",
   "types": "index.d.ts",

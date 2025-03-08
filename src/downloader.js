@@ -405,10 +405,14 @@ async function convertFileToMP3(inputPath, outputPath) {
  */
 async function convertToMP3WithFFmpeg(videoId, outputPath) {
   // Create a temporary script to execute youtube-dl
-  const tempScriptPath = path.join(
-    path.dirname(outputPath),
-    `${videoId}_download.ps1`
-  );
+  const outputDir = path.dirname(outputPath);
+
+  // Ensure the output directory exists
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const tempScriptPath = path.join(outputDir, `${videoId}_download.ps1`);
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
   // Write a PowerShell script that uses youtube-dl to download the audio
@@ -569,6 +573,12 @@ export async function downloadMP3(
 
   try {
     if (showProgress) console.log(`Processing YouTube URL: ${url}`);
+
+    // Ensure output directory exists
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+      if (showProgress) console.log(`Created output directory: ${outputDir}`);
+    }
 
     // Check for FFmpeg first
     const ffmpegInstalled = await checkFfmpeg();
