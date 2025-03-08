@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GimmeYTMP3 - YouTube MP3 Downloader</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f7f9fc;
+      }
+
+      h1 {
+        color: #e62117;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+
+      button {
+        background-color: #e62117;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #c41c11;
+      }
+
+      .status {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        display: none;
+      }
+
+      .success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      .error {
+        background-color: #ffebee;
+        color: #c62828;
+      }
+
+      .download-link {
+        display: block;
+        margin-top: 15px;
+        text-align: center;
+        padding: 10px;
+        background-color: #f1f1f1;
+        text-decoration: none;
+        color: #2196f3;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #e62117;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>GimmeYTMP3</h1>
+
+    <div class="container">
+      <div class="form-group">
+        <label for="youtube-url">YouTube Video URL:</label>
+        <input
+          type="text"
+          id="youtube-url"
+          placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        />
+      </div>
+
+      <button id="download-btn">Download MP3</button>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Downloading and converting video. This may take a minute...</p>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
+
+    <script>
+      document
+        .getElementById("download-btn")
+        .addEventListener("click", async () => {
+          const url = document.getElementById("youtube-url").value.trim();
+          const statusElement = document.getElementById("status");
+          const loadingElement = document.getElementById("loading");
+
+          if (!url) {
+            statusElement.className = "status error";
+            statusElement.innerHTML = "Please enter a YouTube URL";
+            statusElement.style.display = "block";
+            return;
+          }
+
+          statusElement.style.display = "none";
+          loadingElement.style.display = "block";
+
+          try {
+            const response = await fetch("/download", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ url }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              statusElement.className = "status success";
+              statusElement.innerHTML = `
+            <p>${data.message}</p>
+            <a href="${data.downloadUrl}" class="download-link" download>Download MP3</a>
+          `;
+            } else {
+              statusElement.className = "status error";
+              statusElement.innerHTML = `Error: ${data.error}`;
+            }
+          } catch (error) {
+            statusElement.className = "status error";
+            statusElement.innerHTML = `Error: ${error.message}`;
+          } finally {
+            loadingElement.style.display = "none";
+            statusElement.style.display = "block";
+          }
+        });
+    </script>
+  </body>
+</html>

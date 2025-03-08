@@ -1,0 +1,14 @@
+{
+  "name": "gimmeytmp3-web-interface",
+  "version": "1.0.0",
+  "description": "Web interface for GimmeYTMP3",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "gimmeytmp3-web-interface": "file:"
+  }
+}

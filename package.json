@@ -1,0 +1,36 @@
+{
+  "name": "gimmeytmp3",
+  "version": "1.0.0",
+  "description": "Download YouTube videos as MP3 files",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "gimmeytmp3": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node test/test.js",
+    "start": "node src/cli.js"
+  },
+  "keywords": [
+    "youtube",
+    "mp3",
+    "downloader",
+    "audio"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/gimmeytmp3.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/gimmeytmp3/issues"
+  },
+  "homepage": "https://github.com/yourusername/gimmeytmp3#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "gimmeytmp3": "file:"
+  }
+}
