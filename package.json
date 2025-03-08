@@ -1,11 +1,11 @@
 {
-  "name": "gimmeytmp3",
+  "name": "@RimunAce/gimmeytmp3",
   "version": "1.0.0",
   "description": "Download YouTube videos as MP3 files",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "gimmeytmp3": "./src/cli.js"
+    "gimmeytmp3": "src/cli.js"
   },
   "scripts": {
     "test": "node test/test.js",
@@ -21,16 +21,19 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/gimmeytmp3.git"
+    "url": "git+https://github.com/RimunAce/gimmeytmp3.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/gimmeytmp3/issues"
+    "url": "https://github.com/RimunAce/gimmeytmp3/issues"
   },
-  "homepage": "https://github.com/yourusername/gimmeytmp3#readme",
+  "homepage": "https://github.com/RimunAce/gimmeytmp3#readme",
   "engines": {
     "node": ">=16.0.0"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "dependencies": {
-    "gimmeytmp3": "file:"
+    "@RimunAce/gimmeytmp3": "file:"
   }
 }
